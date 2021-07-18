@@ -1,0 +1,831 @@
+## <주제>
+<ul>
+<li>한국프로야구 2001-2020 데이터를 활용한 순위 예측 및 분석</li>
+</ul>
+
+## <주제선정이유>
+- 제 꿈은 스포츠 데이터 분석가가 되는 것입니다. 스포츠 산업을 전공으로 하고 통계학을 이중전공으로 공부하면서 세운 저의 꿈입니다. 아직 부족한 것이 많고 완벽한 이해가 된것은 아니지만, 스포츠 산업에 그동안 해운것을 적용시켜보고 실현시켜보고 싶어서 스포츠 중에서도 야구를 선택해서 분석을 하고자 했습니다. 부족함이 아직 많으나 감안하셔서 읽어주시면 감사드리겠습니다.
+
+- 많은 산업에서 데이터 분석의 중요성은 커져가고 있으며 스포츠 분야 역시 데이터의 중요성이 커지는것은 마찬가지입니다. 이제는 실제 스포츠 현장에서도 데이터 분석을 적용하여 경기 분석 및 예측을 위해서 사용하고 있어 연구의 필요성은 있다고 생각합니다.
+
+- 세상에는 많은 스포츠 종목이 있지만, 여러 스포츠 종목 중에서도 특히 데이터의 종류와 양이 많아 '데이터 스포츠'라고 불리고 비교적 대중에게 친근한 스포츠인 야구를 선정했습니다. 제가 분석하고자 하는 것은 타자와 투수 기록들을 통해서 순위를 예측하는 것입니다. 물론 야구 경기에 있어서 타자와 투수 기록만이 있는 것이 아니라 수비와 주루에 대한 기록들이 있습니다. 타자, 투수, 수비, 주루에 대한 기록들이 복합적으로 적용되어 1승이 만들어지며, 그 승들이 모여서 좋은 순위를 기록하게 됩니다. 하지만 이 모두를 분석하기엔 아직 제 능력이 부족하다고 판단하여 타자와 투수기록으로 제한을 두고 분석을 하고자 합니다. <br/><br/>
+
+- 분석데이터는 KBO가 제공하는 2001년부터 2020년까지 프로야구 팀들의 타자, 투수 데이터(01-20시즌 데이터가 KBO에서 제공하는 데이터 전부)입니다. <br/><br/>
+
+- 출처: KBO 기록실 <https://www.koreabaseball.com/Record/Team/Hitter/Basic1.aspx> <br/><br/>
+
+- 야구 종목에 있어서 데이터 분석의 중요성은 나날이 커졌고, 야구종목에서 데이터를 분석하는 방법 중 하나인 세이버 매트릭스라는 방식이 있습니다. <br/><br/>
+
+- 세이버 매트릭스(SaberMatrix)는 수학적 · 통계학적 방법론을 도입하여 야구를 객관적인 수치로 분석하는 방식을 말합니다. SABR와 metrics(측정)의 합성어로 세이버매트릭스 전문가인 빌 제임스가 창시한 SABR(The Society for American Baseball Research)라는 모임을 중심으로 1971년에 정립됐습니다. <br/><br/>
+
+- 일반 야구 관중들에게도 친숙한 지수인 OPS, WHIP 등이 바로 세이버매트릭스에서 나온 것입니다. 이 분야의 전문가는 세이버매트리션(Sabermetrician)이라 부르는데 이들은 야구의 모든 플레이를 최대한 객관적이고 세밀한 분석하는 데 주안점을 두고 있습니다.
+
+- 출처:  세이버 매트릭스 <https://terms.naver.com/entry.nhn?docId=3440431&cid=43667&categoryId=43667>
+
+<img src = "C:\Users\JongJun\Desktop\capture.JPG">
+
+사진 출처: <http://h21.hani.co.kr/arti/sports/sports_general/47758.html>
+
+- 미디어를 통해서도 '데이터 야구'의 중요성을 강조하는 기사들이 많고, 야구뿐만이 아니라 다양한 스포츠 종목에서 데이터 분석가를 키우기 위한 노력을 하고 있는 것으로 보아 충분히 연구를 할 필요성이 있다고 생각했습니다.
+
+- 본 데이터 분석의 한계점은 데이터의 수가 적다는 것입니다.팀의 순위에 영향을 미치는 변수인 데이터 열의 개수는 62개(타자와 투수의 기록)로 많은 편이지만 데이터 행의 개수는 174개로 결코 큰 데이터라고 볼 수는 없습니다. KBO가 제공하는 데이터를 모두 가져오기는 했으나, 큰 데이터라고 볼 수는 없는 것이 현실입니다. 그럼에도 이 데이터를 선택한 이유는 야구라는 스포츠로 데이터 분석을 해보고 싶었고, 앞으로 계속해서 데이터가 쌓인다면 의미가 있는 분석이 될 수 있다고 생각해 실천하게 되었습니다.
+
+```{r}
+getwd()
+setwd('C:\\Users\\JongJun\\Desktop')
+library(car)
+kbo <- read.csv("kbo.csv")
+str(kbo)
+head(kbo)
+
+kbo_batter <- kbo[1:30] #순위와 타자 기록 할당
+head(kbo_batter)
+colnames(kbo_batter) 
+summary(kbo_batter)
+```
+- AVG : 타율 / PA : 타석 / AB : 타수  / R : 득점 / H : 안타 / 2B : 2루타 / 3B : 3루타  / HR : 홈런 / TB : 루타 / RBI : 타점 / SAC : 희생번트 / SF : 희생 플라이 / BB : 볼넷 / IBB : 고의 사구 / HBP : 사구 / SO : 삼진 / GDP : 병살타 / SLG : 장타율/ OBP : 출루율 / OPS : 출루율 + 장타율 / MH : 멀티 히트 / RISP : 득점권 타율 / PH.BA : 대타타율
+
+```{r}
+kbo_pitcher <- kbo[-6:-30] #순위와 투수 기록 할당
+head(kbo_pitcher)
+colnames(kbo_pitcher) 
+summary(kbo_pitcher)
+```
+- ERA : 평균 자책점 / W : 승 / L : 패 / SV : 세이브 / HLD : 홀드 / WPCT : 승률 / IP  : 이닝/ H : 피안타/ HR : 피홈런 / BB : 볼넷 / HBP : 사구 / SO : 삼진 / R : 실점 / ER : 자책점 / WHIP : 이닝당 출루허용률 / CG : 완투 / SHO : 완봉 / QS : 퀄리티 스타트 / BSV : 블론세이브 / TBF : 타자수 / NP : 투구수 / AVG : 피안타율 / 2B : 2루타 / 3B : 3루타 / SAC : 희생번트/ SF : 희생플라이 / IBB : 고의사구 / WP : 폭투 / BK : 보크
+
+### <회귀분석>
+
+### 타자
+#### 중간고사때까지 현황
+```{r}
+pairs(kbo_batter[c(3,6,11,12,17,25,26,27,30)]) #Scatter plot
+round(cor(kbo_batter[c(3,6,11,12,17,25,26,27,30)]),3)
+
+batter.lm1 <- lm(RANK_INV ~ AVG + R + H + X2B +X3B + HR + RBI + SLG + OBP + OPS + RISP + PH.BA, data=kbo_batter) 
+summary(batter.lm1)
+```
+- summary함수 내용을 보면 OPS는 NA로 표기되어 있었고, OPS가 (SLG+OBP)인 것인데 이에 대한 확실한 이해도 되지 않은 상태에서 무작정 회귀모형에 적용시키다 보니 NA가 나온 것 같습니다.
+
+```{r}
+batter.lm1 <- lm(RANK_INV ~ AVG + R + H + X2B +X3B + HR + RBI + SLG + OBP + RISP + PH.BA, data=kbo_batter) #OPS 제외
+summary(batter.lm1)
+summary_batter_lm1 <-  summary(batter.lm1)
+summary_batter_lm1$adj.r.squared #위 회귀모형의 Adj.R-Squared
+```
+
+#### 예측정확도 평가
+```{r}
+rank.pred.batter1 <- predict(batter.lm1)
+a <- range(c(kbo_batter$RANK_INV, rank.pred.batter1))
+plot(kbo_batter$RANK_INV, rank.pred.batter1, xlab= "Actual", ylab = "Predicted", xlim= a, ylim = a)
+abline(0,1,col = 2, lty =2)
+
+batter_mse1 <- mean((kbo_batter$RANK_INV - rank.pred.batter1)^2) #mse
+batter_rmse1 <- sqrt(mean((kbo_batter$RANK_INV - rank.pred.batter1)^2)) #rmse
+batter_R_squared1 <- var(rank.pred.batter1)/var(kbo_batter$RANK_INV) #R sqaured
+```
+
+- 위 내용은 중간 프로젝트로 제출했던 내용입니다. 당시에는 교수님 강의자료를 그저 따라하는 용이었고, 저만의 기준을 세우지 않고 분석을 실시했던것 같습니다. 그래서 저는 모든 타자 기록에 대한 데이터중에서 순위와의 상관계수가 0.4 이상되는 기록을 통해서 회귀모형에 적용시켜보고자 했습니다. <br/><br/>
+- 또한 타자 기록의 속성은 높을 수록 좋고, 순위는 숫자가 작을수록 좋은 것입니다. 이에 순위를 1등을 하면 10등으로, 2등을하면 9등으로 이런 형태로 바꾸어 양의 상관관계를 가질수 있도록 수정했습니다. <br/><br/>
+- RANK_INV: 1등 -> 10등 / 2등 -> 9등 / 3등 -> 8등 / 4등 -> 7등 / 5등 -> 6등 / 6등 -> 5등 / 7등 -> 4등 / 8등 -> 3등 / 9등 -> 2등 / 10등 -> 1등 <br/><br/>
+- 이에 모든 타자 기록와 순위에 대한 상관계수를 다시 확인해보았습니다.
+
+```{r}
+round(cor(kbo_batter[c(4,6,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29)]),3) 
+```
+- 타율, 득점, 타점, 장타율, 출루율, 장타율 + 출루율, 득점권타율이 순위와 상대적으로 높은 양의 상관관계를 가지고 있음을 확인할 수 있었습니다.
+
+```{r}
+round(cor(kbo_batter[c(4,6,11,16,17,25,26,29)]),3) #순위와 타율, 득점, 루타, 타점, 장타율, 출루율, 득점권타율(OPS는 장타율 + 출루율 이므로 제외)
+pairs(kbo_batter[c(4,6,11,16,17,25,26,29)]) #Scatter plot
+```
+
+- 순위와 상대적으로 높은 상관계수를 가진 타율, 득점, 타점, 장타율, 출루율, 득점권 타율간의 산점도이며 모두 양의 상관 관계를 보이는 것을 확인했습니다.
+
+```{r}
+batter.lm2 <- lm(RANK_INV ~ AVG + R + TB+ RBI + SLG + OBP + RISP , data=kbo_batter) #타자 다중 회귀분석
+```
+- 위에서 상대적으로 높은 상관계수(0.4이상)를 보인 변수들과 순위를 다중 회귀모형으로 분석해보고자 합니다.
+```{r}
+summary(batter.lm2)
+summary_batter_lm2 <-  summary(batter.lm2)
+summary_batter_lm2$adj.r.squared #위 회귀모형의 Adj.R-Squared
+```
+
+#### 예측정확도 평가
+```{r}
+rank.pred.batter2 <- predict(batter.lm2)
+a1 <- range(c(kbo_batter$RANK_INV, rank.pred.batter2))
+plot(kbo_batter$RANK_INV, rank.pred.batter2, xlab= "Actual", ylab = "Predicted", xlim= a1, ylim = a1)
+abline(0,1,col = 2, lty =2)
+
+batter_mse2 <- mean((kbo_batter$RANK_INV - rank.pred.batter2)^2) #mse
+batter_rmse2 <- sqrt(mean((kbo_batter$RANK_INV - rank.pred.batter2)^2)) #rmse
+batter_R_squared2 <- var(rank.pred.batter2)/var(kbo_batter$RANK_INV) #R sqaured
+```
+
+- 중간고사때 사용했던 회귀모형의 Adjusted R squared는 약 0.40이고 상대적으로 상관계수가 높은 변수들만 회귀모형에 적용시켜 예측 정확도를 평가했을 때, R squared는 0.41이었습니다. 두 회귀 모형 모두 성능이 좋은 모델은 아니지만 조금 더 예측률이 높고 단순한 형태인 두번째 모형을 사용해도 될 것 같다는 생각이 들었습니다.
+- 그러나 제가 임의로 기준(상관계수 0.4이상)을 세워 회귀모형을 세웠지만, 전체 변수가 포함된 회귀모형에서 변수선택법을 통해서 통계적으로 유의미한 변수들을 채택해보고자 변수선택법을 실시했봤습니다.
+
+### 변수선택법
+```{r}
+step(batter.lm1, trace = 1)
+```
+- stepwise 변수선택법을 통해서 타율, 득점, 안타, 장타율이 유의한 것으로 확인됐습니다.
+
+```{r}
+batter.lm3 <- lm(RANK_INV ~ AVG + R + H + SLG, data=kbo_batter) #stepwise 변수 선택법을 통해서 채택된 변수들만 할당하여 확인
+summary(batter.lm3)
+summary_batter_lm3 <-  summary(batter.lm3)
+summary_batter_lm3$adj.r.squared
+```
+
+#### 예측정확도 평가
+```{r}
+rank.pred.batter3 <- predict(batter.lm3)
+a2 <- range(c(kbo_batter$RANK_INV, rank.pred.batter3))
+plot(kbo_batter$RANK_INV, rank.pred.batter3, xlab= "Actual", ylab = "Predicted", xlim= a2, ylim = a2)
+abline(0,1,col = 2, lty =2)
+
+batter_mse3 <- mean((kbo_batter$RANK_INV - rank.pred.batter3)^2) #mse
+batter_rmse3 <-sqrt(mean((kbo_batter$RANK_INV - rank.pred.batter3)^2)) #rmse
+batter_R_squared3 <-var(rank.pred.batter3)/var(kbo_batter$RANK_INV) #R sqaured
+```
+
+#### 모형들간의 정확도 비교 및 평가
+```{r}
+c(batter_mse1, batter_mse2, batter_mse3)
+c(batter_rmse1, batter_rmse2, batter_rmse3)
+c(summary_batter_lm1$adj.r.squared,summary_batter_lm2$adj.r.squared,summary_batter_lm3$adj.r.squared)
+```
+
+- 세가지 모형의 Adjust R squared 값을 비교해봤을 때,변수선택법을 통해서 구성된 모형의 설명력이 약 42%으로로 가장 높은 것을 확인할 수 있었습니다.
+
+#### 회귀분석 평가 및 결론 (타자)
+- 순위_INV = 102.221*타율 + 0.034*득점 - 0.02*안타 -36.944*장타율 - 4.96 의 회귀 모형 채택
+  - 예) 타율으로 0.295, 득점으로 800점, 안타로 1400개, 장타율로 0.430인 경우 순위 예측
+```{r}
+new_batter <- data.frame(AVG = 0.295, R = 800, H = 1400, SLG= 0.430)
+predict(batter.lm3, new_batter)
+```
+- 위 기록으론 8.169574로 2등에서 3등을 할것으로 예측
+
+### 투수
+#### 중간고사때까지 현황
+```{r}
+pairs(kbo_pitcher[c(3,6,15,16,17,18,19,20,22,25,29)]) #Scatter plot
+round(cor(kbo_pitcher[c(3,6,15,16,17,18,19,20,22,25,29)]),3)
+pitcher.lm1 <- lm(RANK ~ ERA + H.1 + HR.1 + BB.1 + HBP.1 + SO.1 + R.1 + WHIP + QS + AVG.1,data=kbo_pitcher) #투수 다중 회귀분석
+summary(pitcher.lm1)
+summary_pitcher_lm1 <-  summary(pitcher.lm1)
+summary_pitcher_lm1$adj.r.squared
+```
+
+#### 예측모형 평가
+```{r}
+rank.pred.pitcher1 <- predict(pitcher.lm1)
+a3 <- range(c(kbo_pitcher$RANK, rank.pred.pitcher1))
+plot(kbo_pitcher$RANK, rank.pred.pitcher1, xlab= "Actual", ylab = "Predicted", xlim= a3, ylim = a3)
+abline(0,1,col = 2, lty =2)
+
+pitcher_mse1 <- mean((kbo_pitcher$RANK - rank.pred.pitcher1)^2) #MSE
+pitcher_rmse1 <- sqrt(mean((kbo_pitcher$RANK - rank.pred.pitcher1)^2)) #RMSE
+pitcher_R_squared1 <- var(rank.pred.pitcher1)/var(kbo_pitcher$RANK_INV) #R sqaured
+```
+
+- 투수 기록 역시 타자와 마찬가지로 똑같은 기준으로 상관계수가 0.4이상인 변수만 선택해여 모형을 만들어보는 것으로 수정했습니다.
+```{r}
+pairs(kbo_pitcher[c(3,6,15,16,17,18,19,20,22,25,29)]) #Scatter plot
+round(cor(kbo_pitcher[c(3,6,15,16,17,18,19,20,22,25,29)]),3)
+
+pitcher.lm2 <- lm(RANK ~ ERA +  R.1 + WHIP + AVG.1, data=kbo_pitcher) #투수 다중 회귀분석 (상관계수 0.4 이상)
+summary(pitcher.lm2)
+summary_pitcher_lm2 <-  summary(pitcher.lm2)
+summary_pitcher_lm2$adj.r.squared
+```
+
+#### 예측정확도 평가
+```{r}
+rank.pred.pitcher2 <- predict(pitcher.lm2)
+a4 <- range(c(kbo_pitcher$RANK, rank.pred.pitcher2))
+plot(kbo_pitcher$RANK, rank.pred.pitcher2, xlab= "Actual", ylab = "Predicted", xlim= a4, ylim = a4)
+abline(0,1,col = 2, lty =2)
+
+pitcher_mse2 <- mean((kbo_pitcher$RANK - rank.pred.pitcher2)^2) #MSE
+pitcher_rmse2 <- sqrt(mean((kbo_pitcher$RANK - rank.pred.pitcher2)^2)) #RMSE
+pitcher_R_squared2 <- var(rank.pred.pitcher2)/var(kbo_pitcher$RANK_INV) #R sqaured
+```
+
+- 중간고사때까지의 회귀모형과 그 이후에 조금 더 단순해진 회귀모형의 예측 정확도를 비교해봤을 때, R squared이 수정전에는 0.444, 수정후가 0.3659으로 약 8%가량의 차이를 보이는 것을 확인할 수 있었습니다. 타자의 회귀모형은 수정후의 모형이 더 간단하여 채택했으나, 투수의 회귀모형은 수정전의 모형을 채택하는 것이 낫다고 생각했습니다. <br/><br/>
+
+- 지금까지는 제 주관으로 변수를 선택해서 모형을 비교해본 것이었고, 타자와 마찬가지로 주관이 아닌 통계적인 방법인 변수 선택법을 통해서 유의미한 변수들로 모형을 구성해보고자 하여 변수선택법을 적용해보기로 했습니다.
+
+#### stepwise 변수선택법
+```{r}
+step(pitcher.lm1, trace = 1)
+```
+
+- 그 결과 피안타, 피홈런, 사구, 삼진, 실점이 유의미한 변수인 것으로 확인되어 해당 변수들로 모형을 만들어 평가를 하고 이전 모형들과 비교해보았습니다.
+
+```{r}
+pitcher.lm3 <- lm(RANK ~ H.1 +  HR.1 + HBP.1 + SO.1 + R.1, data=kbo_pitcher) #stepwise 변수 선택법을 통해서 채택된 변수들만 입력하여 확인
+summary_pitcher_lm3 <-  summary(pitcher.lm3)
+summary_pitcher_lm3$adj.r.squared
+
+rank.pred.pitcher3 <- predict(pitcher.lm3)
+a5 <- range(c(kbo_pitcher$RANK, rank.pred.pitcher3))
+plot(kbo_pitcher$RANK, rank.pred.pitcher3, xlab= "Actual", ylab = "Predicted", xlim= a5, ylim = a5)
+abline(0,1,col = 2, lty =2)
+
+pitcher_mse3 <- mean((kbo_pitcher$RANK - rank.pred.pitcher3)^2) #MSE
+pitcher_rmse3 <- sqrt(mean((kbo_pitcher$RANK - rank.pred.pitcher3)^2)) #RMSE
+pitcher_R_squared3 <- var(rank.pred.pitcher3)/var(kbo_pitcher$RANK_INV) #R sqaured
+```
+
+#### 모형들간의 정확도 비교 및 평가
+```{r}
+c(pitcher_mse1, pitcher_mse2, pitcher_mse3)
+c(pitcher_rmse1, pitcher_rmse2, pitcher_rmse3)
+c(summary_pitcher_lm1$adj.r.squared, summary_pitcher_lm2$adj.r.squared,summary_pitcher_lm3$adj.r.squared)
+```
+
+- 세개의 타자 모형과 마찬가지로 투수 모형의 Adjust R squared 값을 비교해봤을 때, 약 46%의 설명력 역시 좋은 설명력이라고 할 수는 없으나 변수선택법을 통해서 구성된 모형의 설명력이 가장 높은 것을 확인할 수 있었습니다. 이에 모형이 간단하고 설명력이 가장 좋은 변수선택법을 통한 모형을 최종 채택 했습니다.
+
+#### 최종 채택된 투수 기록의 회귀모형
+```{r}
+pitcher.lm3 <- lm(RANK ~ H.1 +  HR.1 + HBP.1 + SO.1 + R.1, data=kbo_pitcher) #투수 다중 회귀분석
+summary(pitcher.lm3)
+```
+
+- 회귀 모형: 순위 = -0.008*피안타-0.025*피홈런+0.017*사구-0.006*삼진+0.03*실점+2.114
+  - 예) 1300개 피안타, 110개 피홈런, 60개 사구, 1000개 삼진, 700실점인 경우 에상 순위
+```{r}
+new_pithcer <- data.frame(H.1 = 1300, HR.1 = 110, HBP.1 = 60, SO.1=1000, R.1= 700)
+predict(pitcher.lm3, new_pithcer)
+```
+- 위 기록으로의 예측 순위는 5.06로 5등을 할것으로 예측
+
+### 다중공선성 문제 확인
+#### 타자
+```{r}
+vif(batter.lm1) #모든 변수
+```
+- 심한 다중공선선 문제를 가지고 있습니다.
+
+```{r}
+vif(batter.lm2) #상관계수 0.4이상 변수
+```
+- 위 모형 역시 득점과 타점, 루타에서 다중공선성 문제가 있었습니다.
+
+```{r}
+vif(batter.lm3) #stepwise 변수선택법을 통한 변수
+```
+- 득점에서 10을 넘는 것을 보였습니다.
+
+```{r}
+batter.lm4 <- lm(RANK_INV ~ AVG  + H + SLG, data=kbo_batter) #vif에서 탐지된 득점 변수를 제외한 모형
+summary(batter.lm4)
+```
+
+- Adjusted R_Squared 값이 0.2674로 현저히 떨어진 것을 확인할 수 있었습니다. 이에 위 모형을 채택하기보다는 batter.lm3모형이 득점에서 vif문제가 있어도 채택하는 것이 더 낫다고 판단됩니다.
+
+#### 투수
+```{r}
+vif(pitcher.lm1) #전체 변수
+```
+- 평균자책점, 피안타, 사사구, 실점, 이닝당 출루허용률, 피안타율에서 10을 훌쩍 넘는 vif값을 확인할 수 있었습니다.
+```{r}
+vif(pitcher.lm2) #상관계수 0.4 이상 변수
+```
+- 평균자책점과, 실점에서 10을 넘는 vif값을 확인할 수 있었습니다.
+```{r}
+vif(pitcher.lm3) #stepwise 변수선택을 통한 변수
+```
+- 다중공선성 문제가 없는 것으로 확인되었습니다.
+
+## <로지스틱 회귀분석>
+- 특정 순위를 예측하는 회귀모형 대신에 페넌트레이스가 끝났을 때의 기록으로 플레이오프에 진출할 수 있도록 '5등 이내'와 '5등 밖' 순위를 이항분류하는 로지스틱 회귀분석을 실시해보았습니다.
+
+#### 예측 정확도 평가를 위한 ROC plot 코드
+```{r}
+ROC.plot <- function(Pred, Actual)
+  # Pred: predicted class probability
+  # Actual: indicator for actual class
+{
+  require(ROCR)
+  Prediction <- prediction(Pred, Actual)
+  Perf <- performance(Prediction, 
+                      measure = "tpr", x.measure = "fpr")
+  plot(Perf, main = "ROC curve", cex.axis = 0.7)
+  abline(0, 1, lty = 2)
+  auc <- performance(Prediction, "auc")@y.values[[1]]
+  text(0.7, 0.5, paste("AUC = ", round(auc, 4)))
+  return(list(AUC = auc))
+}
+```
+
+### 타자
+```{r, warning= F, message= F}
+library(caret)
+library(Epi)
+library(e1071)
+set.seed(0)
+print(N <- nrow(kbo_batter)) #타자기록 행 개수 확인
+print(N.tr <- round(0.7*N)) #훈련데이터 70%
+tr <- sort(sample(1:N, N.tr, replace = FALSE))
+kbo_batter.tr <- kbo_batter[tr,] #훈련데이터 할당
+kbo_batter.te <- kbo_batter[-tr,] #시험데이터 할당
+```
+
+#### 모든 변수 입력 모형
+```{r}
+glm.fit.batter1 <- glm(PO ~ AVG + R + H + X2B + X3B + HR + RBI + SAC + SF + BB + IBB + HBP + SO + GDP + SLG + OBP + MH + RISP + PH.BA, family= "binomial", data= kbo_batter.tr)
+glm.fit.batter1_summary <- summary(glm.fit.batter1)
+glm.fit.batter1_summary
+
+Pr.glm.batter1 <- predict(glm.fit.batter1, newdata = kbo_batter.te, type = "response") #예측성능 확인
+Pr.glm.batter1 <- 1*(Pr.glm.batter1 < 0.5)
+cutoff <- 0.5
+Actual1 <- 1*(kbo_batter.te$PO == "<=5")
+
+f.Pr.glm.batter1 <- as.factor(Pr.glm.batter1)
+f.Actual1 <- as.factor(Actual1)
+
+confusionMatrix(f.Pr.glm.batter1, f.Actual1)
+
+glm.fit.batter1_ROC_plot <- ROC.plot(Pr.glm.batter1,Actual1) #ROC 커브
+glm.fit.batter1_ROC_plot
+```
+
+#### 변수선택을 통해 채택된 변수들
+```{r}
+glm.fit.batter2 <- glm(PO ~ AVG + R + H + SLG, family= "binomial", data= kbo_batter.tr)
+glm.fit.batter2_summary <- summary(glm.fit.batter2)
+glm.fit.batter2_summary
+
+
+Pr.glm.batter2 <- predict(glm.fit.batter2, newdata = kbo_batter.te, type = "response") #예측성능 확인
+Pr.glm.batter2 <- 1*(Pr.glm.batter2 < 0.5)
+Actual2 <- 1*(kbo_batter.te$PO == "<=5")
+
+f.Pr.glm.batter2 <- as.factor(Pr.glm.batter2)
+f.Actual2 <- as.factor(Actual2)
+confusionMatrix(f.Pr.glm.batter2, f.Actual2)
+
+glm.fit.batter2_ROC_plot <- ROC.plot(Pr.glm.batter2,Actual2) #ROC 커브
+glm.fit.batter2_ROC_plot
+```
+
+#### 두 예측 모형 비교
+```{r}
+c(glm.fit.batter1_summary$aic, glm.fit.batter2_summary$aic) #AIC
+c(glm.fit.batter1_ROC_plot$AUC, glm.fit.batter2_ROC_plot$AUC) #AUC
+```
+- AIC(Akaike information Criterion) 값이 더 작고 AUC가 0.7884615로 약 0.04만큼 더 큰 변수선택을 통해서 채택된 로지스틱 회귀모형이 더 좋은 모형으로 확인되었습니다.
+
+### 투수
+```{r}
+set.seed(0)
+print(N1 <- nrow(kbo_pitcher)) #투수기록 행 개수 확인
+print(N.tr1 <- round(0.7*N1)) # 훈련데이터 70%
+tr1 <- sort(sample(1:N1, N.tr1, replace = FALSE))
+kbo_pitcher.tr <- kbo_pitcher[tr1,] #훈련데이터 할당
+kbo_pitcher.te <- kbo_pitcher[-tr1,] #시험 데이터 할당 
+```
+
+#### 모든 변수 입력
+```{r}
+glm.fit.pitcher1 <- glm(PO ~ ERA + H.1 + HR.1 + BB.1 + HBP.1 + SO.1 + R.1 + WHIP + QS + AVG.1, family= "binomial", data= kbo_pitcher.tr)
+glm.fit.pitcher1_summary <- summary(glm.fit.pitcher1)
+glm.fit.pitcher1_summary
+
+Pr.glm.pitcher1 <- predict(glm.fit.pitcher1, newdata = kbo_pitcher.te, type = "response")
+Pr.glm.pitcher1 <- 1*(Pr.glm.pitcher1 < 0.5)
+Actual3 <- 1*(kbo_pitcher.te$PO == "<=5")
+
+f.Pr.glm.pitcher1 <- as.factor(Pr.glm.pitcher1)
+f.Actual3 <- as.factor(Actual3)
+
+confusionMatrix(f.Pr.glm.pitcher1, f.Actual3)
+
+glm.fit.pitcher1_ROC_plot <- ROC.plot(Pr.glm.pitcher1, Actual3) #ROC 커브
+glm.fit.pitcher1_ROC_plot
+```
+
+#### 변수선택을 통해서 채택된 변수들
+```{r}
+glm.fit.pitcher2 <- glm(PO ~ H.1 +  HR.1 + HBP.1 + SO.1 + R.1, family= "binomial", data= kbo_pitcher.tr)
+glm.fit.pitcher2_summary <- summary(glm.fit.pitcher2)
+glm.fit.pitcher2_summary
+
+Pr.glm.pitcher2 <- predict(glm.fit.pitcher2, newdata = kbo_pitcher.te, type = "response")
+Pr.glm.pitcher2 <- 1*(Pr.glm.pitcher2 < 0.5)
+Actual4 <- 1*(kbo_pitcher.te$PO == "<=5")
+
+f.Pr.glm.pitcher2 <- as.factor(Pr.glm.pitcher2)
+f.Actual4 <- as.factor(Actual4)
+
+confusionMatrix(f.Pr.glm.pitcher2, f.Actual4)
+
+glm.fit.pitcher2_ROC_plot <- ROC.plot(Pr.glm.pitcher2, Actual4) #ROC 커브
+glm.fit.pitcher2_ROC_plot
+```
+
+#### 예측 모형 비교
+```{r}
+c(glm.fit.pitcher1_summary$aic, glm.fit.pitcher2_summary$aic) #AIC
+c(glm.fit.pitcher1_ROC_plot$AUC, glm.fit.pitcher2_ROC_plot$AUC) #AUC
+```
+- 투수 모형에서도 AIC 값이 더 작고 AUC가 0.75로 약 0.0576923만큼 더 큰 변수선택을 통해서 채택된 로지스틱 회귀모형이 더 좋은 모형으로 확인되었습니다.
+
+- 훈련데이터 70%, 실험데이터 30%로 하여 예측모형을 구성해봤을 때, 타자와 투수 모두 변수선택을 통해서 채택된 로지스틱 회귀모형이 가장 좋은 모델로 채택되었습니다. 타자는 약 78.8%, 투수는 75%의 정확도를 보였습니다.
+
+## <의사결정 나무>
+최신 분류기술에 비해 다소 예측력은 떨어지지만 규칙이 이해하기 쉽고 해석이 용이한 지도학습 중 한 방법인 의사결정 나무 기법을 통해 플레이오프 순위권(5등 이내, 5등 밖)을 예측해보기로 했습니다.
+
+### 타자
+#### 훈련데이터와 시험 데이터 쪼개기(70:30)
+```{r}
+library(rpart)
+library(caret)
+set.seed(0)
+N <- nrow(kbo_batter)
+kbo_batter$grp <- runif(N)
+p.tr <- 0.7 #훈련데이터 70%
+
+library(dplyr)
+kbo_batter.tr1 <- kbo_batter %>% filter(grp <= p.tr)
+kbo_batter.te1 <- kbo_batter %>% filter(grp > p.tr)
+```
+
+#### 모든 변수 입력
+```{r}
+batter.fit1 <- rpart(PO ~ AVG + R + H + X2B + X3B + HR + RBI + SAC + SF + BB + IBB + HBP + SO + GDP + SLG + OBP + MH + RISP + PH.BA, data=kbo_batter)
+par(cex= 0.7)
+plot(batter.fit1, uniform = TRUE)
+text(batter.fit1, use.n = TRUE)
+```
+
+- 모든 타자의 변수를 입력했을 때, 출루율 0.3405를 기준으로 나뉘어졌고, 왼쪽 가지에선 사구, 삼진, 홈런 개수를 기준으로 5등이내와 5등 밖 순위권으로 나뉘어졌습니다. 그리고 오른쪽 가지에선 삼진, 타율, 다시 출류율을 기준으로 분류가 되는것을 확인할수 있었습니다.
+
+#### 예측성능(모든 변수 입력 모형)
+```{r}
+Actual5 <- 1*(kbo_batter.te1$PO == "<=5")
+Predicted1 <- 1*(predict(batter.fit1, newdata = kbo_batter.te1, type = "class") == "<=5")
+table(Actual5, Predicted1)
+batter.fit1_ROC <- ROC.plot(Actual5,Predicted1)
+batter.fit1_ROC
+```
+
+#### 변수선택으로 채택된 변수
+```{r}
+batter.fit2 <- rpart(PO ~ AVG + R + H + SLG, data=kbo_batter)
+par(cex= 0.7)
+plot(batter.fit2, uniform = TRUE)
+text(batter.fit2, use.n = TRUE)
+```
+
+- 변수선택법으로 채택된 변수들만으로 입력했을 때는 결과가 다음과 같았습니다. 가지들의 수가 이전 보다 더 많아져 노드의 값이 더 많아진 것을 확인할 수 있었습니다.
+
+#### 예측성능(변수 선택 모형)
+```{r}
+Actual5 <- 1*(kbo_batter.te1$PO == "<=5")
+Predicted2 <- 1*(predict(batter.fit2, newdata = kbo_batter.te1, type = "class") == "<=5")
+table(Actual5, Predicted2)
+batter.fit2_ROC <- ROC.plot(Actual5,Predicted2)
+batter.fit2_ROC
+```
+
+#### 평가 및 결론
+```{r}
+c(batter.fit1_ROC$AUC,batter.fit2_ROC$AUC)
+```
+- 두 모형을 평가하고 비교해보았을 때 두 모형의 AUC는 큰 차이는 없으나 상대적으로 더 크고 비교적 모형이 간단한 변수선택으로 채택된 모형을 채택하는게 나은 것으로 확인됩니다.
+
+### 투수
+```{r}
+set.seed(0)
+N11 <- nrow(kbo_pitcher)
+kbo_pitcher$grp <- runif(N11)
+p.tr1 <- 0.7
+
+kbo_pitcher.tr1 <- kbo_pitcher %>% filter(grp <= p.tr1)
+kbo_pitcher.te1 <- kbo_pitcher %>% filter(grp > p.tr1)
+```
+
+#### 모든 변수
+```{r}
+pitcher.fit1 <- rpart(PO ~ ERA + H.1 + HR.1 + BB.1 + HBP.1 + SO.1 + R.1 + WHIP + QS + AVG.1, data=kbo_pitcher)
+par(cex= 0.7)
+plot(pitcher.fit1, uniform = TRUE)
+text(pitcher.fit1, use.n = TRUE)
+```
+
+- 투수 기록에 있어서도 모든 투수 기록들을 변수로 넣었을 때 평균자책점, 피안타, 퀄리티 스타트 개수, 피홈런 개수로 의사결정 나무가 구성되는 것을 확인할 수 있었습니다.
+
+#### 예측성능 (모든 변수)
+```{r}
+Actual6 <- 1*(kbo_pitcher.te1$PO == "<=5")
+Predicted3 <- 1*(predict(pitcher.fit1, newdata = kbo_pitcher.te1, type = "class") == "<=5")
+table(Actual6, Predicted3)
+pitcher.fit1_ROC <- ROC.plot(Actual6,Predicted3)
+pitcher.fit1_ROC
+```
+
+####변수선택에 의해 채택된 변수들
+```{r}
+pitcher.fit2 <- rpart(PO ~ H.1 +  HR.1 + HBP.1 + SO.1 + R.1, data=kbo_pitcher)
+par(cex= 0.7)
+plot(pitcher.fit2, uniform = TRUE)
+text(pitcher.fit2, use.n = TRUE)
+```
+
+- 타자와 마찬가지로 변수선택법을 통해서 채택된 투수기록들로 모형을 만들어보았고, 결과는 위와 같았습니다.
+
+#### 예측성능
+```{r}
+Actual6 <- 1*(kbo_pitcher.te1$PO == "<=5")
+Predicted4 <- 1*(predict(pitcher.fit2, newdata = kbo_pitcher.te1, type = "class") == "<=5")
+table(Actual6, Predicted4)
+pitcher.fit2_ROC <- ROC.plot(Actual6,Predicted4)
+pitcher.fit2_ROC
+```
+
+#### 평가 및 결론
+```{r}
+c(pitcher.fit1_ROC$AUC,pitcher.fit2_ROC$AUC)
+```
+- 타자의 의사결정 모형과 다르게 투수는 변수선택법에 의해서 채택된 모형보다는 모든 기록이 입력된 모형의 정확도가 더 나은 것으로 확인되었습니다.
+
+## 랜덤 포레스트
+
+- Randomforest를 통해서 분석해보고자 하는 것은
+  - 1. 입력 변수에 따른 의사결정 나무 모형과 랜덤 포레스트 모형 비교
+  - 2. 입력 변수에 따른 모형 분석을 통해 가장 이상적인 모형 채택을 해보고자 합니다.
+### 타자
+#### Decision Tree
+```{r}
+library(randomForest)
+N <- nrow(kbo_batter)
+kbo_batter$grp <- runif(N)
+p.tr <- 0.7 #70% 훈련 데이터
+
+library(dplyr)
+kbo_batter.tr1 <- kbo_batter %>% filter(grp <= p.tr)
+kbo_batter.te1 <- kbo_batter %>% filter(grp > p.tr)
+x.tr <- kbo_batter.tr %>% select(AVG, R, H, X2B, X3B, HR, RBI, SAC, SF, BB, IBB, HBP, SO, GDP, SLG, OBP, MH, RISP, PH.BA)
+x.te <- kbo_batter.te %>% select(AVG, R, H, X2B, X3B, HR, RBI, SAC, SF, BB, IBB, HBP, SO, GDP, SLG, OBP, MH, RISP, PH.BA)
+```
+
+#### 모든변수
+```{r}
+batter.fit1 <- rpart(PO ~ AVG + R + H + X2B + X3B + HR + RBI + SAC + SF + BB + IBB + HBP + SO + GDP + SLG + OBP + MH + RISP + PH.BA, data=kbo_batter)
+
+batter.fit1.pred <- predict(batter.fit1, newdata = kbo_batter.te1, type = "prob")[,2]
+boxplot(batter.fit1.pred ~ kbo_batter.te1$PO, ylim = c(0, 1), horizontal = TRUE,
+        ylab = "PO", xlab = "Predicted probability")
+abline(v = 0.3, col = 2)
+```
+
+#### 예측성능(모든 변수 입력 모형)
+```{r}
+Actual5 <- 1*(kbo_batter.te1$PO == "<=5")
+Predicted1 <- 1*(predict(batter.fit1, newdata = kbo_batter.te1, type = "class") == "<=5")
+confusionMatrix(as.factor(Actual5), as.factor(Predicted1))
+```
+- 타자기록 중 모든 변수를 넣어서 의사결정 나무 모형을 봤을 때 정확도는 77.97%인 것을 확인했습니다.
+
+#### Random Forest
+```{r}
+rf.fit <- randomForest(x = x.tr,
+                       y = kbo_batter.tr$PO,
+                       importance = TRUE)
+
+varImpPlot(rf.fit, type = 1)  # Accuracy
+```
+- 분류정확도를 개선하는데에 기여한 정도를 나타내는 지수는 위와 같은 형태인 것을 확인할 수 있었고, 삼진, 출루율, 장타율, 득점, 타점, 볼넷, 홈런, 타율, 득점권타율, 안타, 대타타율, 멀티히트, 사구, 2루타, 희생타, 병살타, 루타, 고의사구, 희생번트 순인 것을 확인했습니다.
+
+```{r}
+varImpPlot(rf.fit, type = 2)  # Gini
+```
+- 각 변수의 중요도를 나타내는 지니지수는 위와 같았다. 삼진과 출루율이 모형에 많은 기여를 하는 것으로 확인되었다.
+
+```{r}
+rf.pred <- predict(rf.fit, newdata = kbo_batter.te1, type = "prob")[,2]
+boxplot(rf.pred ~ kbo_batter.te1$PO, ylim = c(0, 1), horizontal = TRUE,
+        ylab = "PO", xlab = "Predicted probability")
+abline(v = 0.3, col = 2)
+```
+- 
+
+#### 예측성능(모든 변수 입력 모형)
+```{r}
+Actual55 <- 1*(kbo_batter.te1$PO == "<=5")
+Predicted55 <- 1*(predict(rf.fit, newdata = kbo_batter.te1, type = "class") == "<=5")
+confusionMatrix(as.factor(Actual55), as.factor(Predicted55))
+```
+- 타자 기록 중 모든 변수를 넣어서 랜덤 포레스트 모형을 적용시켰을 때는 예측 정확도가 96.61%까지 상승한 것을 확인 할 수 있었습니다.
+
+
+#### 변수선택으로 채택된 변수
+```{r}
+batter.fit2 <- rpart(PO ~ AVG + R + H + SLG, data=kbo_batter)
+
+batter.fit2.pred <- predict(batter.fit2, newdata = kbo_batter.te1, type = "prob")[,2]
+boxplot(batter.fit2.pred ~ kbo_batter.te1$PO, ylim = c(0, 1), horizontal = TRUE,
+        ylab = "PO", xlab = "Predicted probability")
+abline(v = 0.3, col = 2)
+```
+
+#### 예측성능(변수선택으로 채택된 변수 입력 모형)
+```{r}
+Actual7 <- 1*(kbo_batter.te1$PO == "<=5")
+Predicted17 <- 1*(predict(batter.fit2, newdata = kbo_batter.te1, type = "class") == "<=5")
+confusionMatrix(as.factor(Actual7), as.factor(Predicted17))
+```
+- 회귀분석시 변수선택으로 채택된 변수들만으로 의사결정 나무 모형 분석을 했을 때 예측 정확도는 79.66%로 모든 변수를 넣었을 때 보다 조금 더 좋은 것을 확인할 수 있었습니다.
+
+#### Random Forest
+```{r}
+x.tr1 <- kbo_batter.tr %>% select(AVG, R, H,SLG)
+x.te1 <- kbo_batter.te %>% select(AVG, R, H,SLG)
+
+rf.fit2 <- randomForest(x = x.tr1,
+                       y = kbo_batter.tr$PO,
+                       importance = TRUE)
+
+varImpPlot(rf.fit2, type = 1)  # Accuracy
+varImpPlot(rf.fit2, type = 2)  # Gini
+
+rf.pred2 <- predict(rf.fit2, newdata = kbo_batter.te1, type = "prob")[,2]
+boxplot(rf.pred2 ~ kbo_batter.te1$PO, ylim = c(0, 1), horizontal = TRUE,
+        ylab = "PO", xlab = "Predicted probability")
+abline(v = 0.3, col = 2)
+```
+- 위 변수들 중에서는 득점이 가장 중요한 변수인 것으로 나타났습니다. 
+
+#### 예측성능(변수선택으로 채택된 변수 입력 모형)
+```{r}
+Actual27 <- 1*(kbo_batter.te1$PO == "<=5")
+Predicted27 <- 1*(predict(rf.fit2, newdata = kbo_batter.te1, type = "class") == "<=5")
+confusionMatrix(as.factor(Actual27), as.factor(Predicted27))
+```
+- 변수 선택법으로 선택된 랜덤포레스트 모형의 예측 정확도는 93.22%였습니다. 모든 변수를 입력했을 때의 결과보다는 낮지만 변수 4개(득점, 장타율, 안타, 타율)만으로도 높은 예측 정확도를 가진 랜덤 포레스트 모형을 찾을 수 있었습니다.
+
+### 투수
+#### Decision Tree
+```{r}
+N7 <- nrow(kbo_pitcher)
+kbo_pitcher$grp <- runif(N7)
+p.tr <- 0.7 #70%의 학습 데이터
+
+kbo_pitcher.tr1 <- kbo_pitcher %>% filter(grp <= p.tr)
+kbo_pitcher.te1 <- kbo_pitcher %>% filter(grp > p.tr)
+x.tr3 <- kbo_pitcher.tr %>% select(ERA,H.1,HR.1,BB.1,HBP.1,SO.1,R.1,WHIP,QS,AVG.1)
+x.te3 <- kbo_pitcher.te %>% select(ERA,H.1,HR.1,BB.1,HBP.1,SO.1,R.1,WHIP,QS,AVG.1)
+```
+
+#### 모든변수
+```{r}
+pitcher.fit1 <- rpart(PO ~ ERA+ H.1 + HR.1 + BB.1 + HBP.1 + SO.1 +R.1 + WHIP + QS +AVG.1, data=kbo_pitcher)
+pitcher.fit1.pred <- predict(pitcher.fit1, newdata = kbo_pitcher.te1, type = "prob")[,2]
+boxplot(pitcher.fit1.pred ~ kbo_pitcher.te1$PO, ylim = c(0, 1), horizontal = TRUE,
+        ylab = "PO", xlab = "Predicted probability")
+abline(v = 0.3, col = 2)
+```
+
+#### 예측성능(모든 변수 입력 모형)
+```{r}
+Actual88 <- 1*(kbo_pitcher.te1$PO == "<=5")
+Predicted88 <- 1*(predict(pitcher.fit1, newdata = kbo_pitcher.te1, type = "class") == "<=5")
+confusionMatrix(as.factor(Actual88), as.factor(Predicted88))
+```
+- 투수의 모든 기록들을 변수로 입력했을 때 96%의 우수한 예측성능을 가진 의사결정 나무 모형을 얻을 수 있었습니다.
+
+### Random Forest
+```{r}
+rf.fit3 <- randomForest(x = x.tr3,
+                       y = kbo_pitcher.tr$PO,
+                       importance = TRUE)
+
+varImpPlot(rf.fit3, type = 1)  # Accuracy
+varImpPlot(rf.fit3, type = 2)  # Gini
+
+rf.pred3 <- predict(rf.fit3, newdata = kbo_pitcher.te1, type = "prob")[,2]
+boxplot(rf.pred3 ~ kbo_pitcher.te1$PO, ylim = c(0, 1), horizontal = TRUE,
+        ylab = "PO", xlab = "Predicted probability")
+abline(v = 0.3, col = 2)
+```
+- 평균 자책점과 이닝당 출루허용률이 가장 기여를 많이 하고 있음을 확인할 수 있었습니다.
+
+#### 예측성능(모든 변수 입력 모형)
+```{r}
+Actual99 <- 1*(kbo_pitcher.te1$PO == "<=5")
+Predicted99 <- 1*(predict(rf.fit3, newdata = kbo_pitcher.te1, type = "class") == "<=5")
+confusionMatrix(as.factor(Actual99), as.factor(Predicted99))
+```
+- 모든 변수들을 입력하여 랜덤포레스트 모형으로 예측했을 때는 90.2%로 의사결정 나무보다는 낮은 예측 정확도를 가지고 있었습니다. 타자와 마찬가지로 변수선택법을 통해서 채택된 변수들을 넣으면 결과가 어떨지 궁금하여 실시해봤습니다.
+
+#### 변수선택으로 채택된 변수
+```{r}
+x.tr4 <- kbo_pitcher.tr %>% select(H.1, HR.1, HBP.1, SO.1, R.1)
+x.te4 <- kbo_pitcher.te %>% select(H.1, HR.1, HBP.1, SO.1, R.1)
+
+pitcher.fit2 <- rpart(PO ~ H.1 + HR.1 + HBP.1 + SO.1 + R.1,  data=kbo_pitcher)
+
+pitcher.fit2.pred <- predict(pitcher.fit2, newdata = kbo_pitcher.te1, type = "prob")[,2]
+boxplot(pitcher.fit2.pred ~ kbo_pitcher.te1$PO, ylim = c(0, 1), horizontal = TRUE,
+        ylab = "PO", xlab = "Predicted probability")
+abline(v = 0.3, col = 2)
+```
+
+#### 예측성능
+```{r}
+Actual10 <- 1*(kbo_pitcher.te1$PO == "<=5")
+Predicted10 <- 1*(predict(pitcher.fit2, newdata = kbo_pitcher.te1, type = "class") == "<=5")
+confusionMatrix(as.factor(Actual10), as.factor(Predicted10))
+```
+- 변수 선택법을 통해서 채택된 변수들을 입력했을 때의 의사결정 나무 모형의 예측 정확도는 78.43%로 다소 떨어진 것을 확인할 수 있었습니다.
+
+#### Random Forest
+```{r}
+rf.fit4 <- randomForest(x = x.tr4,
+                        y = kbo_pitcher.tr$PO,
+                        importance = TRUE)
+
+varImpPlot(rf.fit4, type = 1)  # Accuracy
+varImpPlot(rf.fit4, type = 2)  # Gini
+
+rf.pred4 <- predict(rf.fit4, newdata = kbo_pitcher.te1, type = "prob")[,2]
+boxplot(rf.pred4 ~ kbo_pitcher.te1$PO, ylim = c(0, 1), horizontal = TRUE,
+        ylab = "PO", xlab = "Predicted probability")
+abline(v = 0.3, col = 2)
+```
+- 위 모형에선 실점이 가장 중요한 변수라는 것을 확인 할 수 있었습니다.
+
+#### 예측성능(변수선택으로 채택된 변수)
+```{r}
+Actual13 <- 1*(kbo_pitcher.te1$PO == "<=5")
+Predicted13 <- 1*(predict(rf.fit4, newdata = kbo_pitcher.te1, type = "class") == "<=5")
+confusionMatrix(as.factor(Actual13), as.factor(Predicted13))
+```
+- 변수 선택으로 채택된 변수들로 랜덤 포레스트를 했을 때 예측 정확도는 84.31%로 의사결정 나무 모형보다는 상승한 것을 확인할 수 있었습니다.
+
+### 결론 및 제언
+
+- 본 프로젝트의 가정
+  - 타자와 투수의 기록이 독립적인 기록이라고 가정을 하고 분석을 해보고자 했음(제한점 참고)
+
+#### <회귀모형>
+- 타자와 투수 모두 다양한 기록이 있었고, 처음에는 모든 변수들로 처음에는 분석을 해보고자 했습니다. 모형간 평가를 할때는 Adjust R-squared로 하였고, 생각보다 예측모형이 좋지 않은 것을 확인했습니다. 이에 저만의 주관적인 기준(상관계수 0.4 이상)을 세워보았고, 위 변수들로 회귀분석을 실시해본 결과 후자의 모형이 타자와 투수 모두 좋은 것으로 나타났습니다. 하지만 여기서 변수선택법을 통해서 모형을 구성했을 땐 더 나은 모형을 구할수 있어 변수선택법을 통한 모형이 가장 정확도가 좋은 것으로 확인되었습니다.
+
+  - <최종 채택 회귀모형>
+  - 타자: 순위_INV = 102.221*타율 + 0.034*득점 - 0.02*안타 -36.944*장타율 - 4.96 
+  - 투수: 순위 = -0.008*피안타-0.025*피홈런+0.017*사구-0.006*삼진+0.03*실점+2.114
+
+#### <로지스틱 회귀모형>
+- 타자
+  - 모든 변수입력 모형의 예측 정확도: 75%
+  - 변수선택법을 통한 모형의 예측 정확도: 78.84%
+  
+- 투수
+  - 모든 변수입력 모형의 예측 정확도: 69.23%
+  - 변수선택법을 통한 모형의 예측 정확도: 75%
+
+- 타자와 투수 모두 변수선택법을 통한 로지스틱 회귀 모형의 예측 정확도가 더 높아 위 모형들을 채택할 수 있을 것 같습니다.
+
+#### <의사결정 나무>
+- 타자
+  - 모든 변수입력 모형의 예측 정확도: 77.14%
+  - 변수선택법을 통한 모형의 예측 정확도: 78.46%
+  
+- 투수
+  - 모든 변수입력 모형의 예측 정확도: 86.31%
+  - 변수선택법을 통한 모형의 예측 정확도: 83.71%
+
+- 타자기록에서는 변수 선택법을 통한 예측의 정확도가 더 높고, 모형 또한 간단하기에 채택할수 있을 것같습니다.
+
+- 반면, 투수기록에서는 모든 변수를 입력한 모형의 예측의 정확도가 더 높았습니다. 두 모형간 비교를 하자면 전자를 채택하겠지만, 변수선택법을 통한 모형의 예측 정확도도 나쁘지는 않았음을 확인 할 수 있어, 사용자의 주관에 맞게 사용할 수 있을 거라고 생각합니다.
+
+#### <랜덤 포레스트>
+- 타자
+  - 모든 변수입력 의사결정 나무 모형의 예측 정확도: 77.97%
+  - 모든 변수입력 랜덤포레스트 모형의 예측 정확도: 96.61%
+  - 변수선택법 채택 변수입력 의사결정 나무 모형의 예측 정확도: 79.66%
+  - 변수선택법 채택 변수입력 랜덤포레스트 모형의 예측 정확도: 93.22%
+  
+- 의사결정 나무보다 랜덤포레스트 모형을 실시했을 때 예측 정확도가 더 높았습니다. 모든 변수를 입력하여 예측을 할수도 있을 것이고, 변수선택법을 통해서 채택된 비교적 간단한 모형을 통한 예측을 해도 준수한 예측이 가능합니다.
+  
+- 투수
+  - 모든 변수입력 의사결정 나무 모형의 예측 정확도: 96.08%
+  - 모든 변수입력 랜덤포레스트 모형의 예측 정확도: 90.2%
+  - 변수선택법 채택 변수입력 의사결정 나무 모형의 예측 정확도: 78.43%
+  - 변수선택법 채택 변수입력 랜덤포레스트 모형의 예측 정확도: 84.31%
+  
+- 투수 기록은 타자와 달른 결과를 보이기도 했습니다. 모든 변수를 입력했을 때는 의사결정 나무의 예측 정확도가 랜덤포레스트의 예측 정확도보다 더 높았고, 변수 선택법을 통한 모형에서는 랜덤 포레스트의 모형이 예측정확도가 더 높았습니다. 예측정확도만을 평가기준으로 한다면 모든 투수기록의 변수를 입력한 랜덤 포레스트를 채택해야할 것으로 보입니다.
+
+- 본 프로젝트의 제한점은 다음과 같습니다.
+  - 데이터의 개수가 적음: KBO에서 제공하는 데이터를 모두 가져오기는 했으나, 빅데이터라고 보기는 힘든 데이터의 양이었습니다. 교수님께서 수업 중에 사용된 데이터들도 적다고 하셨는데, 그럼에도 불구하고 위 데이터를 사용한 것은 스포츠 데이터 중에서 데이터의 스포츠라고 불리는 야구의 데이터 분석을 해보고 싶었기 때문입니다.
+  
+  - 타자와 투수 기록은 결코 독립적이라고 할 수는 없으며, 야구 경기에는 투수와 타자 기록으로만 구성된 것이 아닌 수비와 주루에 대한 기록도 있음
+    - 타자 기록과 투수 기록은 경기에 독립적으로 기여하는 것이 아닙니다. 이에 타자와 투수 두 기록을 동시에 넣어 분석할 수 있는 방법을 강구해보면 더 좋을 것, 또한 야구에선 투수, 타자 기록 뿐만 아니라  수비, 주루 기록들도 있고, 이 기록들이 적절한 조화를 이루어야 1승이 되고 그 승리가 모여서 좋은 순위를 기록하게 되는 것이기에 복합적인 추후 분석이 필요합니다.
